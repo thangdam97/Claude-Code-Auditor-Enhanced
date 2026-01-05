@@ -253,33 +253,201 @@ Prevents bundling:
 
 ## Deployment
 
-### Automated Deployment
+### Script Overview
 
-```powershell
-# Windows (PowerShell)
-.\deploy-clauderc-universal.ps1 -TargetProject "C:\Projects\MyApp"
+Three deployment options for different project types and workflows:
 
-# Windows (Batch)
+| Script | Purpose | Best For | OS |
+|--------|---------|----------|-----|
+| `deploy-clauderc-universal.bat` | Deploy universal protocol + VSCode config | Code projects (JS, Python, Rust, Go, Java, C#) | Windows |
+| `deploy-prompt-clauderc.bat` | Deploy prompt engineering protocol | LLM projects, prompt templates, XML/JSON schemas | Windows |
+| Manual copy | Direct file placement | Custom workflows, testing | Any |
+
+### Using deploy-clauderc-universal.bat (Code Projects)
+
+**For any code project (JavaScript, Python, Rust, Go, Java, C#):**
+
+```batch
+# Option 1: Command-line argument (recommended)
+deploy-clauderc-universal.bat "C:\Users\YourName\Documents\MyProject"
+
+# Option 2: Interactive prompt
 deploy-clauderc-universal.bat
-
-# Manual
-cp .clauderc /path/to/project/
-cp .vscode/settings.json /path/to/project/.vscode/
+# Then enter: C:\Users\YourName\Documents\MyProject
 ```
 
-### Verification
+**What it does:**
+1. ✓ Locates `.clauderc` file in current directory
+2. ✓ Validates target project exists
+3. ✓ Backs up any existing `.clauderc` to `.clauderc-backups/`
+4. ✓ Deploys universal protocol to target project
+5. ✓ Creates or updates VSCode `settings.json`
+6. ✓ Generates quick reference documentation
+7. ✓ Verifies deployment success
+
+**Example:**
+
+```batch
+C:\Users\Admin\Documents\Claude_Instruction_Prompt> deploy-clauderc-universal.bat "C:\Users\Admin\Documents\MyApp"
+
+========================================================
+ Code Change Auditor .clauderc Deployment
+ Target: C:\Users\Admin\Documents\MyApp
+========================================================
+
+[1] Checking source file...
+   Found: .clauderc
+
+[2] Checking target project...
+   Found: C:\Users\Admin\Documents\MyApp
+
+[3] Checking for existing .clauderc...
+   No existing .clauderc (fresh deployment)
+
+[4] Deploying code auditor .clauderc...
+   Deployed successfully!
+
+[5] Verifying deployment...
+   Verified: .clauderc present in target directory
+   Verified: Code change auditor protocol detected
+
+SUCCESS: Deployment complete!
+
+[6] Configuring VSCode settings...
+   Updated .vscode\settings.json
+
+[7] Creating quick reference card...
+   Generated CLAUDERC-QUICKREF.md
+```
+
+### Using deploy-prompt-clauderc.bat (LLM Prompt Projects)
+
+**For prompt engineering, LLM schemas, or instruction templates:**
+
+```batch
+# Option 1: Command-line argument (recommended)
+deploy-prompt-clauderc.bat "C:\Users\YourName\Documents\EN_Translator"
+
+# Option 2: Interactive prompt
+deploy-prompt-clauderc.bat
+# Then enter: C:\Users\YourName\Documents\EN_Translator
+```
+
+**What it does:**
+1. ✓ Locates `.clauderc-prompts` in current or target directory
+2. ✓ Validates target project exists
+3. ✓ Backs up existing `.clauderc` if present
+4. ✓ Deploys prompt engineering protocol as `.clauderc`
+5. ✓ Checks for VSCode integration
+6. ✓ Creates quick reference documentation
+7. ✓ Verifies deployment success
+
+**Example:**
+
+```batch
+C:\Users\Admin\Documents\Claude_Instruction_Prompt> deploy-prompt-clauderc.bat "C:\Users\Admin\Documents\EN_Translator"
+
+========================================================
+ Prompt Engineering .clauderc Deployment
+ Target: C:\Users\Admin\Documents\EN_Translator
+========================================================
+
+[1] Checking source file...
+   Found: .clauderc-prompts
+
+[2] Checking target project...
+   Found: C:\Users\Admin\Documents\EN_Translator
+
+[3] Checking for existing .clauderc...
+   Existing .clauderc found - creating backup...
+   Backed up to: .clauderc-backups\.clauderc.backup.2026-01-05
+
+[4] Deploying prompt engineering .clauderc...
+   Deployed successfully!
+
+[5] Verifying deployment...
+   Verified: .clauderc present in target directory
+   Verified: Prompt engineering protocol detected
+
+SUCCESS: Deployment complete!
+
+Next Steps:
+  1. Open project in VSCode: code "C:\Users\Admin\Documents\EN_Translator"
+  2. Start Claude Code (Ctrl+L)
+  3. Initialize protocol: "Read .clauderc and confirm you understand..."
+```
+
+### Deployment Script Features
+
+**Smart File Detection:**
+- Scripts check multiple locations for protocol files
+- Falls back to target project directory if not in current directory
+- Provides helpful error messages with search locations
+
+**Backup Management:**
+- Existing `.clauderc` files are automatically backed up
+- Backups stored in `.clauderc-backups/` folder
+- Timestamped backup names for easy recovery
+
+**Verification:**
+- Confirms deployment success by checking file exists
+- Validates protocol type is correct
+- Shows file size and protocol detection results
+
+**Cross-Platform Compatibility:**
+- Pure batch syntax (works in `cmd.exe`)
+- No ANSI color codes (maximum compatibility)
+- Works from any directory
+- Handles paths with spaces correctly
+
+### Manual Deployment
+
+If you prefer not to use scripts:
+
+```bash
+# Code projects
+cp .clauderc /path/to/your-project/
+cp .vscode/settings.json /path/to/your-project/.vscode/
+
+# Prompt projects
+cp .clauderc-prompts /path/to/your-project/.clauderc
+
+# Verify
+head -20 /path/to/your-project/.clauderc
+```
+
+### Verification After Deployment
 
 ```bash
 # Check protocol is loaded
 cat .clauderc | head -30
 
-# Test with Claude
-"Read .clauderc and confirm you understand the protocol"
+# Test with Claude Code
+# In VSCode: Ctrl+L (or Cmd+L on Mac)
+# Say: "Read .clauderc and confirm you understand the protocol"
 
 # Expected response:
 "I've read the .clauderc file. This is a code change auditor
 protocol with Type A/B/C risk classification..."
 ```
+
+### Troubleshooting Deployment
+
+**Issue: "File not found" error**
+- Solution: Ensure `.clauderc` or `.clauderc-prompts` exists in project directory
+- Run script with full path: `deploy-script.bat "C:\full\path\to\project"`
+
+**Issue: "Target project not found"**
+- Solution: Verify path is correct and project directory exists
+- Try absolute path instead of relative path
+
+**Issue: Backup creation fails**
+- Solution: Ensure you have write permissions to project directory
+- Check that `.clauderc-backups/` folder can be created
+
+**Issue: VSCode settings not updating**
+- Solution: Manually update `.vscode/settings.json` with contents from CLAUDERC-QUICKREF.md
+- Ensure `.vscode` folder exists in target project
 
 ## Development
 
