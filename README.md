@@ -1,4 +1,4 @@
-# Code Change Auditor Protocol
+# Code Change Auditor Protocol (Created for Claude Code, can be modified to work with Gemini CLI or Codex)
 
 AI-assisted code review framework providing structured risk classification, syntax validation, and diff-based approval workflows. Achieves 100% success rate (10/10 edge case tests) with small language models (Claude Haiku 4.5) through explicit instruction protocols.
 
@@ -7,7 +7,7 @@ AI-assisted code review framework providing structured risk classification, synt
 ### Prerequisites
 
 - Claude Code extension for VSCode, or
-- Any AI coding assistant with file instruction support
+- Any AI coding assistant with file instruction support 
 - Git (for pre-commit hooks, optional)
 
 ### Installation
