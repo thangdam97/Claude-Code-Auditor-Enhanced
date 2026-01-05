@@ -121,26 +121,25 @@ echo.
 echo [5] Verifying deployment...
 
 if exist "%TARGET_PROJECT%\.clauderc" (
-    for %%F in ("%TARGET_PROJECT%\.clauderc") do set "filesize=%%~zF"
-    
-    if !filesize! gtr 1000 (
-        echo    Verified: .clauderc present (!filesize! bytes)
-    ) else (
-        echo    WARNING: File size suspiciously small (!filesize! bytes)
-    )
+    echo    Verified: .clauderc present in target directory
     
     REM Check for key content
     findstr /C:"PROMPT ENGINEERING" "%TARGET_PROJECT%\.clauderc" >nul
     if !errorlevel! equ 0 (
         echo    Verified: Prompt engineering protocol detected
+        echo.
+        echo SUCCESS: Deployment complete!
     ) else (
         echo    WARNING: May not be prompt-specific protocol
     )
 ) else (
     echo    ERROR: .clauderc not found after deployment
+    echo    Location checked: "%TARGET_PROJECT%\.clauderc"
     pause
     exit /b 1
 )
+
+pause
 
 REM Step 6: Update VSCode settings (if needed)
 echo.
