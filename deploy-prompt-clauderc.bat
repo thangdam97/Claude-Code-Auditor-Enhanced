@@ -28,44 +28,54 @@ if "%~1"=="" (
 
 set "BACKUP_DIR=%TARGET_PROJECT%\.clauderc-backups"
 
-REM Colors simulation (basic)
-set "COLOR_GREEN=[92m"
-set "COLOR_YELLOW=[93m"
-set "COLOR_RED=[91m"
-set "COLOR_CYAN=[96m"
-set "COLOR_RESET=[0m"
+REM Try to locate source file (current dir or target project dir)
+if exist "%SOURCE_CLAUDERC%" (
+    set "SOURCE_PATH=%SOURCE_CLAUDERC%"
+) else if exist "%TARGET_PROJECT%\%SOURCE_CLAUDERC%" (
+    set "SOURCE_PATH=%TARGET_PROJECT%\%SOURCE_CLAUDERC%"
+) else (
+    set "SOURCE_PATH="
+)
+
+REM Simple output (cmd.exe doesn't support ANSI colors by default)
+setlocal disabledelayedexpansion
+for /F %%A in ('copy /Z "%~f0" nul') do set "BS=%%A"
+setlocal enabledelayedexpansion
 
 REM Step 1: Verify source file exists
 echo [1] Checking source file...
-if not exist "%SOURCE_CLAUDERC%" (
-    echo %COLOR_RED%ERROR: %SOURCE_CLAUDERC% not found%COLOR_RESET%
+if "!SOURCE_PATH!"=="" (
+    echo ERROR: .clauderc-prompts not found
     echo.
-    echo This script expects .clauderc-prompts in the current directory.
-    echo Please ensure the file is present and try again.
+    echo This script looks for .clauderc-prompts in:
+    echo   1. Current directory
+    echo   2. Target project directory: %TARGET_PROJECT%
+    echo.
+    echo Please ensure .clauderc-prompts exists in one of these locations.
     echo.
     pause
     exit /b 1
 )
-echo %COLOR_GREEN%   Found: %SOURCE_CLAUDERC%%COLOR_RESET%
+echo    Found: !SOURCE_PATH!
 
 REM Step 2: Verify target project exists
 echo.
 echo [2] Checking target project...
 if not exist "%TARGET_PROJECT%" (
-    echo %COLOR_RED%ERROR: Target project not found: %TARGET_PROJECT%%COLOR_RESET%
+    echo ERROR: Target project not found: %TARGET_PROJECT%
     echo.
-    echo Please update the TARGET_PROJECT variable in this script.
+    echo Please provide a valid project path.
     echo.
     pause
     exit /b 1
 )
-echo %COLOR_GREEN%   Found: %TARGET_PROJECT%%COLOR_RESET%
+echo    Found: %TARGET_PROJECT%
 
 REM Step 3: Backup existing .clauderc if present
 echo.
 echo [3] Checking for existing .clauderc...
 if exist "%TARGET_PROJECT%\.clauderc" (
-    echo %COLOR_YELLOW%   Existing .clauderc found - creating backup...%COLOR_RESET%
+    echo    Existing .clauderc found - creating backup...
     
     REM Create backup directory
     if not exist "%BACKUP_DIR%" mkdir "%BACKUP_DIR%"
@@ -83,25 +93,25 @@ if exist "%TARGET_PROJECT%\.clauderc" (
     copy "%TARGET_PROJECT%\.clauderc" "%BACKUP_DIR%\.clauderc.backup.%timestamp%" >nul
     
     if !errorlevel! equ 0 (
-        echo %COLOR_GREEN%   Backed up to: .clauderc-backups\.clauderc.backup.%timestamp%%COLOR_RESET%
+        echo    Backed up to: .clauderc-backups\.clauderc.backup.%timestamp%
     ) else (
-        echo %COLOR_RED%   Backup failed!%COLOR_RESET%
+        echo    ERROR: Backup failed!
         pause
         exit /b 1
     )
 ) else (
-    echo %COLOR_CYAN%   No existing .clauderc (fresh deployment)%COLOR_RESET%
+    echo    No existing .clauderc (fresh deployment)
 )
 
 REM Step 4: Deploy the prompt-specific .clauderc
 echo.
 echo [4] Deploying prompt engineering .clauderc...
-copy "%SOURCE_CLAUDERC%" "%TARGET_PROJECT%\.clauderc" >nul
+copy "!SOURCE_PATH!" "%TARGET_PROJECT%\.clauderc" >nul
 
 if %errorlevel% equ 0 (
-    echo %COLOR_GREEN%   Deployed successfully!%COLOR_RESET%
+    echo    Deployed successfully!
 ) else (
-    echo %COLOR_RED%   Deployment failed!%COLOR_RESET%
+    echo    ERROR: Deployment failed!
     pause
     exit /b 1
 )
@@ -114,20 +124,20 @@ if exist "%TARGET_PROJECT%\.clauderc" (
     for %%F in ("%TARGET_PROJECT%\.clauderc") do set "filesize=%%~zF"
     
     if !filesize! gtr 1000 (
-        echo %COLOR_GREEN%   Verified: .clauderc present (!filesize! bytes)%COLOR_RESET%
+        echo    Verified: .clauderc present (!filesize! bytes)
     ) else (
-        echo %COLOR_YELLOW%   Warning: File size suspiciously small (!filesize! bytes)%COLOR_RESET%
+        echo    WARNING: File size suspiciously small (!filesize! bytes)
     )
     
     REM Check for key content
     findstr /C:"PROMPT ENGINEERING" "%TARGET_PROJECT%\.clauderc" >nul
     if !errorlevel! equ 0 (
-        echo %COLOR_GREEN%   Verified: Prompt engineering protocol detected%COLOR_RESET%
+        echo    Verified: Prompt engineering protocol detected
     ) else (
-        echo %COLOR_YELLOW%   Warning: May not be prompt-specific protocol%COLOR_RESET%
+        echo    WARNING: May not be prompt-specific protocol
     )
 ) else (
-    echo %COLOR_RED%   Verification failed: .clauderc not found after deployment%COLOR_RESET%
+    echo    ERROR: .clauderc not found after deployment
     pause
     exit /b 1
 )
