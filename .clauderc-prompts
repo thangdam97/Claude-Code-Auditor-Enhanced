@@ -1,0 +1,367 @@
+# Claude Code - Prompt Engineering Auditor Protocol
+
+## MANDATORY RULES FOR PROMPT/SCHEMA EDITING
+
+### Rule 1: Understand the Context
+
+This is a **PROMPT ENGINEERING** project, not traditional code.
+- Files contain LLM instructions, not executable logic
+- "Modules" are declarative libraries, not functions to call
+- Changes affect LLM BEHAVIOR, not program execution
+- Validation is SEMANTIC (coherence) not SYNTACTIC (compilation)
+
+### Rule 2: ALWAYS Show Diffs for Schema Changes
+
+When modifying ANY existing prompt/schema content, respond in this format:
+
+```diff
+FILE: [filename]
+ACTION: [brief description]
+RISK: [Type A/B/C]
+SCHEMA_TYPE: [XML/JSON/YAML/Markdown]
+
+- old prompt instruction
++ new prompt instruction
+  unchanged context
+
+WHY: [explanation]
+IMPACT_ON_LLM_BEHAVIOR: [how this changes what the LLM does]
+SEMANTIC_VALIDATION: [✓ checks performed]
+BREAKING_CHANGE: [Yes/No - does this invalidate existing usage?]
+```
+
+Then WAIT for approval before applying.
+
+### Rule 3: Risk Classification for Prompts
+
+**Type A - SAFE** (apply immediately):
+- Adding new examples to ICL (In-Context Learning) sets
+- Adding new documentation/comments
+- Adding new optional parameters with defaults
+- Creating new schemas/modules that don't override existing ones
+- **Still validate semantic coherence!**
+
+**Type B - RISKY** (show diff, wait for approval):
+- Modifying existing instructions/rules
+- Changing parameter definitions
+- Restructuring schema hierarchies
+- Adding constraints that limit LLM behavior
+- Modifying examples that change training patterns
+
+**Type C - DANGEROUS** (show detailed diff + impact analysis + alternatives):
+- Changing prompt contracts (required vs optional fields)
+- Modifying core instruction semantics
+- Breaking changes to schema structure
+- Removing or significantly altering existing rules
+- Changes that invalidate existing prompts using this schema
+
+### Rule 4: Semantic Validation Checklist
+
+Before outputting prompt changes, verify:
+
+**For XML Schemas:**
+- [ ] Tags properly opened and closed
+- [ ] Nesting hierarchy is logical
+- [ ] No orphaned closing tags
+- [ ] Attribute syntax correct (quotes, =, etc)
+- [ ] Schema consistency (same tags used same way)
+- [ ] No contradictory instructions
+
+**For JSON Prompts:**
+- [ ] Valid JSON syntax (brackets, commas, quotes)
+- [ ] No trailing commas
+- [ ] Schema consistency
+- [ ] No contradictory fields
+
+**For Markdown Prompts:**
+- [ ] Consistent header levels
+- [ ] Code blocks properly fenced
+- [ ] Lists formatted consistently
+- [ ] No broken references
+
+**Semantic Coherence:**
+- [ ] No conflicting instructions ("be concise" AND "be verbose")
+- [ ] Clear parameter definitions
+- [ ] Examples match specifications
+- [ ] Trigger conditions are unambiguous
+- [ ] No circular dependencies
+
+### Rule 5: ONE Change Per Edit
+
+Never bundle:
+- Schema change + new examples
+- Restructuring + adding new rules
+- Fix + refactor + feature addition
+
+### Rule 6: Impact Analysis for Prompts
+
+When changing prompts, analyze:
+
+**LLM Behavior Impact:**
+- How will the LLM interpret this differently?
+- What outputs might change?
+- Are existing use cases affected?
+
+**Downstream Dependencies:**
+- What other prompts reference this?
+- Are there templates that extend this?
+- Does this break existing workflows?
+
+**Training Data Coherence:**
+- Do examples still match the rules?
+- Are ICL samples still representative?
+- Does this create new edge cases?
+
+---
+
+## PROMPT-SPECIFIC EXAMPLES
+
+### Example 1: Adding ICL Examples (Type A)
+
+**User Request:**
+"Add examples for KANSAI archetype in master_prompt.xml"
+
+**CORRECT Response:**
+
+```diff
+FILE: master_prompt.xml
+ACTION: Add ICL examples for KANSAI archetype
+RISK: Type A - SAFE (new training example)
+SCHEMA_TYPE: XML
+
+    ONEE:
+    CORRECT:
+    "Ara, ara… you really can't do anything without me, can you?"
+    
+    INCORRECT:
+    "Hey. You need help."
++
++   KANSAI:
++   CORRECT:
++   "Nah, ain't no way that's happenin', ya know?"
++
++   INCORRECT:
++   "No, that will not happen, I believe."
+
+WHY: Completes archetype training set
+IMPACT_ON_LLM_BEHAVIOR:
+  - LLM now has explicit guidance for KANSAI dialect
+  - Reduces interpolation from other archetypes
+  - Improves consistency for this character type
+SEMANTIC_VALIDATION:
+  ✓ Example matches KANSAI definition (line 35)
+  ✓ CORRECT uses casual/regional markers
+  ✓ INCORRECT provides clear contrast
+  ✓ Format consistent with other ICL examples
+BREAKING_CHANGE: No
+
+Apply immediately (Type A)
+```
+
+---
+
+### Example 2: Changing Core Instruction (Type B)
+
+**User Request:**
+"Change VOICE_ENGINE to allow rule explanations in debug mode"
+
+**CORRECT Response:**
+
+```diff
+FILE: master_prompt.xml
+ACTION: Add debug mode exception to VOICE_ENGINE
+RISK: Type B - RISKY (modifies core instruction)
+SCHEMA_TYPE: XML
+
+  <VOICE_ENGINE>
+    All rules defined here are binding.
+    Tagged schemas define mandatory narrative and dialogue behavior.
+    Pronoun pairs, particles, register, and rhythm must be enforced exactly.
+    Sub-arcs temporarily override base archetypes while active.
+-   Do not explain rules. Do not expose schemas.
++   Do not explain rules or expose schemas unless DEBUG_MODE=true.
+    Apply silently and consistently.
+  </VOICE_ENGINE>
+
+WHY: Enable debugging without changing production behavior
+IMPACT_ON_LLM_BEHAVIOR:
+  - Production: No change (DEBUG_MODE undefined = false)
+  - Debug: LLM can explain reasoning when asked
+  - May reduce LLM certainty if it detects ambiguity
+SEMANTIC_VALIDATION:
+  ✓ Conditional is clear (DEBUG_MODE=true)
+  ✓ Default behavior preserved
+  ✓ No contradiction with other rules
+BREAKING_CHANGE: No (backward compatible)
+
+Apply this change?
+```
+
+---
+
+### Example 3: Breaking Schema Change (Type C)
+
+**User Request:**
+"Make ARCH format use JSON instead of pipe-delimited"
+
+**CORRECT Response:**
+
+```diff
+FILE: master_prompt.xml
+ACTION: Restructure ARCH from pipe-delimited to JSON
+RISK: Type C - DANGEROUS (breaking schema change)
+SCHEMA_TYPE: XML
+
+  <ARCHETYPE_DICTIONARY priority="high">
+-   <ARCH>
+-     OJOU|refined_noble,female,high_register|please,indeed,if_you_please,truly|L
+-     GYARU|casual_modern,energetic,peer_register|hey,like,seriously,right|S
+-   </ARCH>
++   <ARCH format="json">
++     {
++       "OJOU": {
++         "traits": ["refined_noble", "female", "high_register"],
++         "vocabulary": ["please", "indeed", "if_you_please", "truly"],
++         "rhythm": "L"
++       },
++       "GYARU": {
++         "traits": ["casual_modern", "energetic", "peer_register"],
++         "vocabulary": ["hey", "like", "seriously", "right"],
++         "rhythm": "S"
++       }
++     }
++   </ARCH>
+
+WHY: JSON is more structured and easier to validate
+IMPACT_ON_LLM_BEHAVIOR:
+  ✗ BREAKING: All existing prompts using ARCH must be updated
+  ✗ BREAKING: Parsing logic in consuming code must change
+  ✗ BREAKING: ICL examples reference old format
+  + Benefit: Enables schema validation
+  + Benefit: Clearer field definitions
+
+SEMANTIC_VALIDATION:
+  ✓ Valid JSON syntax
+  ✓ Same information preserved
+  ✗ Breaks compatibility with existing references
+
+BREAKING_CHANGE: **YES - Major version change required**
+
+ALTERNATIVES TO CONSIDER:
+
+**OPTION A (SAFER):** Keep pipe format, add documentation
+  - No breaking changes
+  - Add ARCH_FORMAT_LEGEND explaining fields
+  - Gradual migration path
+
+**OPTION B (HYBRID):** Support both formats
+  - Add format="pipe" or format="json" attribute
+  - Parser detects and handles both
+  - Allows gradual migration
+
+**OPTION C (CURRENT):** Full migration to JSON
+  - Clean structure
+  - But breaks all existing usage
+  - Requires coordinated update
+
+RECOMMENDATION: Option A (add documentation) unless you control all consumers
+
+Proceed with which option?
+```
+
+---
+
+## PROMPT ENGINEERING BEST PRACTICES
+
+### 1. Declarative vs Imperative
+
+**Declarative (Prompts):**
+```xml
+<RULE>Character must use formal register in court scenes</RULE>
+```
+
+**Imperative (Code):**
+```javascript
+if (scene.location === 'court') {
+  character.register = 'formal';
+}
+```
+
+Prompts DESCRIBE desired behavior. Code IMPLEMENTS behavior.
+
+### 2. Schema Coherence
+
+When auditing prompts, check for:
+- **Contradictions:** "Be concise" vs "Provide detailed explanations"
+- **Ambiguities:** "Use when appropriate" (what defines appropriate?)
+- **Completeness:** All referenced elements defined?
+- **Consistency:** Same concept labeled consistently?
+
+### 3. ICL (In-Context Learning) Quality
+
+Examples should:
+- Cover edge cases
+- Show clear contrasts (CORRECT vs INCORRECT)
+- Match the rules they're demonstrating
+- Be representative, not exhaustive
+
+### 4. Module/Component Design
+
+In prompts, "modules" are:
+- Conceptual groupings, not callable functions
+- May reference external docs/schemas
+- Define WHAT to do, not HOW to execute
+- Can be "orphaned" (defined but not invoked) - that's okay!
+
+---
+
+## CRITICAL DIFFERENCES FROM CODE .clauderc
+
+| Aspect | Code .clauderc | Prompt .clauderc |
+|--------|---------------|------------------|
+| **Validation** | Syntax (compiles?) | Semantics (coherent?) |
+| **Modules** | Must be invoked | Can be declarative libraries |
+| **Breaking** | API signature changes | Instruction contract changes |
+| **Testing** | Unit tests, execution | LLM behavior observation |
+| **Impact** | Runtime errors | LLM interpretation shifts |
+
+---
+
+## WHEN NOT TO USE THIS PROTOCOL
+
+This protocol is for PROMPT/SCHEMA files, not:
+- Actual JavaScript/Python code (use code .clauderc)
+- Data files (CSV, JSON data)
+- Documentation that doesn't instruct LLMs
+- Configuration files for tools (use code .clauderc)
+
+**Trigger phrases for this protocol:**
+- "prompt engineering", "LLM instructions"
+- "schema for AI", "archetype definitions"
+- "in-context learning", "few-shot examples"
+- Files like: `*_prompt.xml`, `*_schema.json`, `system_instructions.md`
+
+---
+
+## VALIDATION: How to Test Prompt Changes
+
+1. **Before/After Comparison:**
+   - Run same input through old vs new prompt
+   - Compare LLM outputs
+   - Check for unintended behavior changes
+
+2. **Edge Case Testing:**
+   - Test with examples from each archetype/category
+   - Test with ambiguous inputs
+   - Test with contradictory instructions
+
+3. **Coherence Check:**
+   - Read prompt aloud - does it make sense?
+   - Are there circular references?
+   - Can an LLM unambiguously follow this?
+
+---
+
+**Protocol Version:** 1.0 (Prompt Engineering Specialized)  
+**Designed For:** LLM instruction schemas, prompt templates, ICL datasets  
+**Not For:** Executable code (use standard .clauderc for that)
