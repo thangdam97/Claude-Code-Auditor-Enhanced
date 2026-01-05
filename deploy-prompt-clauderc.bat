@@ -60,9 +60,14 @@ if exist "%TARGET_PROJECT%\.clauderc" (
     REM Create backup directory
     if not exist "%BACKUP_DIR%" mkdir "%BACKUP_DIR%"
     
-    REM Generate timestamp for backup
-    for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /value') do set datetime=%%I
-    set "timestamp=%datetime:~0,8%-%datetime:~8,6%"
+    REM Generate timestamp for backup (using PowerShell - more reliable than wmic)
+    for /f "delims=" %%a in ('powershell -NoProfile -Command "Get-Date -Format 'yyyyMMdd-HHmmss'"') do set "timestamp=%%a"
+    
+    REM Fallback if PowerShell fails
+    if "!timestamp!"=="" (
+        set "timestamp=%date:~-4%%date:~-10,2%%date:~-7,2%-%time:~0,2%%time:~3,2%%time:~6,2%"
+        set "timestamp=!timestamp: =0!"
+    )
     
     REM Backup the file
     copy "%TARGET_PROJECT%\.clauderc" "%BACKUP_DIR%\.clauderc.backup.%timestamp%" >nul
